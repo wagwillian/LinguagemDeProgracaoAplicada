@@ -1,3 +1,5 @@
+from turtledemo.sorting_animate import Block
+
 import pygame
 from pygame.examples.aliens import Player
 
@@ -13,21 +15,30 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
 
+        self.character_spritesheet = Spritesheet("img/character_sheet.png")
+        self.terrain_spritesheet = Spritesheet("img/Dungeon_Tileset_at.png")
+
     def createTilemap(self):
         for i, row in enumerate(tilemap):
+
             print(i, row)
             for j, column in enumerate(row):
+                Ground(self, j, i)
+
                 if column == "B":
-                    Block(self, j, i)
+
+                    TopBlock(self, j, i)
+
                 if column == "P":
                     Player(self, j, i)
+                if column == "D":
+                    Door(self, j, i)
 
 
 
     def new(self):
         # Inicializa o jogo
 
-        self.createTilemap()
         self.playing = True
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
@@ -72,10 +83,11 @@ class Game:
 g = Game()
 g.intro_screen()
 g.new()
+image_to_load = pygame.image.load("img/single_char.png").convert_alpha()
+print(image_to_load.get_size())
 while g.running:
     g.main()
     g.game_over()
-
 pygame.quit()
 sys.exit()
 
