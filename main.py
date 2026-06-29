@@ -288,22 +288,22 @@ class Game:
         menu_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 26)
 
         lines = [
-            "Use the Arrow Keys to move.",
+            "Use as setas para se mover.",
             "",
-            "Avoid the skeletons.",
+            "Pressione Spaço para Atacar.",
             "",
-            "Find the exit door.",
+            "Encontre a Saida.",
+            "Evite os Esqueletos",
+            "Boa Sorte!",
             "",
-            "Good luck, Wizard!",
-            "",
-            "Press ESC to return."
+            "Pressione ESC para retornar."
         ]
 
         while True:
 
             self.screen.fill((18, 18, 18))
 
-            title = title_font.render("INSTRUCTIONS", True, (255, 215, 0))
+            title = title_font.render("INSTRUÇÕES", True, (255, 215, 0))
             self.screen.blit(title, title.get_rect(center=(WIN_WIDTH // 2, 50)))
 
             y = 120
@@ -337,9 +337,9 @@ class Game:
 
             "",
 
-            "Developed for",
+            "Desenvolvido para",
 
-            "Applied Programming",
+            "Disciplina de Programação Aplicada",
 
             "",
 
@@ -351,7 +351,7 @@ class Game:
 
             "",
 
-            "Press ESC to return"
+            "Pressione ESC para retornar"
 
         ]
 
@@ -359,7 +359,7 @@ class Game:
 
             self.screen.fill((30, 20, 15))
 
-            title = title_font.render("ABOUT", True, (255, 215, 0))
+            title = title_font.render("Sobre", True, (255, 215, 0))
             self.screen.blit(title, title.get_rect(center=(WIN_WIDTH // 2, 50)))
 
             y = 120
