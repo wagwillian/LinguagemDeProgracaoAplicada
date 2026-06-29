@@ -45,6 +45,7 @@ class Player(pygame.sprite.Sprite):
         self.movement()
         self.animate()
         self.collide_enemy()
+        self.collide_stairs()
 
         self.rect.x += self.x_change
         self.collide_blocks("x")
@@ -84,6 +85,12 @@ class Player(pygame.sprite.Sprite):
         if hits:
             self.kill()
             self.game.playing = False
+
+    def collide_stairs(self):
+
+        if pygame.sprite.spritecollide(self, self.game.stairs, False):
+            self.game.playing = False
+            self.game.continues_screen()
 
     def collide_blocks(self, direction):
         if direction == "x":
@@ -161,13 +168,172 @@ class Player(pygame.sprite.Sprite):
 
 class Attack(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
+
         self.game = game
+        self._layer = PLAYER_LAYER
+        self.groups = self.game.all_sprites, self.game.attacks
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
         self.x = x
         self.y = y
         self.width = TILESIZE
         self.height = TILESIZE
 
-        
+        self.animation_loop = 0
+
+        self.image = self.game.attack_spritesheet.get_sprite(0, 0, self.width, self.height)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+    def update(self):
+
+        self.animate()
+        self.collide()
+
+    def collide(self):
+        hits = pygame.sprite.spritecollide(self, self.game.enemies, True)
+
+    def animate(self):
+        direction = self.game.player.facing
+
+        right_animation = [self.game.attack_spritesheet.get_sprite(265, 170, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(330, 170, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(265, 170, 60, self.height)]
+
+        left_animation = [self.game.attack_spritesheet.get_sprite(290, 120, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(345, 120, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(395, 120, 60, self.height)]
+
+        up_animation = [self.game.attack_spritesheet.get_sprite(205, 75, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(255, 75, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(300, 75, self.width, self.height)]
+
+
+        down_animation = [self.game.attack_spritesheet.get_sprite(205, 20, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(255, 20, self.width, self.height),
+                           self.game.attack_spritesheet.get_sprite(300, 15, self.width, self.height)]
+
+        if direction == 'up':
+            self.image = up_animation[math.floor(self.animation_loop)]
+            self.animation_loop += 0.5
+            if self.animation_loop >= 3:
+
+                self.game.attack_sound.play()
+                Projectile(
+                    self.game,
+                    self.rect.centerx,
+                    self.rect.centery,
+                    self.game.player.facing
+                )
+                self.kill()
+        if direction == 'down':
+            self.image = down_animation[math.floor(self.animation_loop)]
+            self.animation_loop += 0.5
+            if self.animation_loop >= 3:
+                self.game.attack_sound.play()
+                Projectile(
+                    self.game,
+                    self.rect.centerx,
+                    self.rect.centery,
+                    self.game.player.facing
+                )
+                self.kill()
+        if direction == 'left':
+            self.image = left_animation[math.floor(self.animation_loop)]
+            self.animation_loop += 0.5
+            if self.animation_loop >= 3:
+                self.game.attack_sound.play()
+                Projectile(
+                    self.game,
+                    self.rect.centerx,
+                    self.rect.centery,
+                    self.game.player.facing
+                )
+                self.kill()
+        if direction == 'right':
+            self.image = right_animation[math.floor(self.animation_loop)]
+            self.animation_loop += 0.5
+            if self.animation_loop >= 3:
+                self.game.attack_sound.play()
+                Projectile(
+                    self.game,
+                    self.rect.centerx,
+                    self.rect.centery,
+                    self.game.player.facing
+                )
+                self.kill()
+
+class Projectile(pygame.sprite.Sprite):
+
+    SPEED = 5
+
+    def __init__(self, game, x, y, direction):
+
+
+        self.game = game
+        self._layer = PLAYER_LAYER
+        self.direction = direction
+
+        self.groups = self.game.all_sprites, self.game.projectiles
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        # Animation
+        self.frames = self.game.projectile_frames
+        print(self.frames[0].get_size())
+        self.animation_index = 0
+        self.animation_speed = 0.25
+
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect(center=(x, y))
+
+        # Movement
+        self.dx = 0
+        self.dy = 0
+
+        if direction == "up":
+            self.dy = -self.SPEED
+
+        elif direction == "down":
+            self.dy = self.SPEED
+
+        elif direction == "left":
+            self.dx = -self.SPEED
+
+        elif direction == "right":
+            self.dx = self.SPEED
+
+    def update(self):
+
+        self.animate()
+
+
+
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+
+        hits = pygame.sprite.spritecollide(self, self.game.doors, True)
+
+        if hits:
+            self.kill()
+
+        if pygame.sprite.spritecollide(self, self.game.enemies, True):
+            self.kill()
+
+        if pygame.sprite.spritecollide(self, self.game.blocks, False):
+            self.kill()
+
+
+    def animate(self):
+
+        self.image = self.frames[int(self.animation_index)]
+
+        self.animation_index += self.animation_speed
+
+        if self.animation_index >= len(self.frames):
+            self.animation_index = 0
+
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -295,7 +461,11 @@ class Door(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = DOOR_LAYER
-        self.groups = self.game.all_sprites
+        self.groups = (
+            self.game.all_sprites,
+            self.game.doors,
+            self.game.blocks,  # <-- add this
+        )
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -303,6 +473,30 @@ class Door(pygame.sprite.Sprite):
         self.height = TILESIZE
 
         self.image = self.game.terrain_spritesheet.get_sprite(224, 354, TILESIZE *2, TILESIZE)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+class Stair(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = GROUND_LAYER + 1
+
+        self.groups = self.game.all_sprites, self.game.stairs
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+
+        self.image = self.game.terrain_spritesheet.get_sprite(
+            225,        # sprite x
+            415,        # sprite y
+            TILESIZE,   # width
+            TILESIZE    # height
+        )
+
+        self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x

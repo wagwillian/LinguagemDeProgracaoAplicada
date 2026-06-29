@@ -8,6 +8,12 @@ import sys
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
+        self.music_playing = False
+        pygame.mixer.music.load("theme.mp3")
+        pygame.mixer.music.set_volume(0.5)
+        self.attack_sound = pygame.mixer.Sound("fireball.mp3")
+        pygame.mixer.music.set_volume(0.5)
         self.screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.running = True
@@ -17,6 +23,8 @@ class Game:
         self.enemy_spritesheet = Spritesheet("img/skeleton_movement.png")
         self.menu_background = pygame.image.load("img/title_screen.png").convert()
         self.game_over_background = pygame.image.load("img/game_over.png").convert()
+        self.attack_spritesheet = Spritesheet("img/mage_attack.png")
+        self.projectile_spritesheet = Spritesheet("img/projectile.png")
 
         self.game_over_background = pygame.transform.scale(
             self.game_over_background,
@@ -41,11 +49,13 @@ class Game:
                     TopBlock(self, j, i)
 
                 if column == "P":
-                    Player(self, j, i)
+                    self.player = Player(self, j, i)
                 if column == "D":
                     Door(self, j, i)
                 if column == "E":
                     Enemy(self, j, i)
+                if column == "S":
+                    Stair(self, j, i)
 
 
 
@@ -58,6 +68,19 @@ class Game:
         self.blocks = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
+        self.projectiles = pygame.sprite.LayeredUpdates()
+        self.doors = pygame.sprite.LayeredUpdates()
+        self.stairs = pygame.sprite.LayeredUpdates()
+        self.projectile_frames = [
+            pygame.image.load("img/FB500-1.png").convert_alpha(),
+            pygame.image.load("img/FB500-2.png").convert_alpha(),
+            pygame.image.load("img/FB500-3.png").convert_alpha(),
+        ]
+
+        self.projectile_frames = [
+            pygame.transform.scale(frame, (32, 32))
+            for frame in self.projectile_frames
+        ]
 
         self.createTilemap()
 
@@ -68,6 +91,16 @@ class Game:
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if self.player.facing == 'up':
+                        Attack(self, self.player.rect.x, self.player.rect.y)
+                    if self.player.facing == 'down':
+                        Attack(self, self.player.rect.x, self.player.rect.y)
+                    if self.player.facing == 'left':
+                        Attack(self, self.player.rect.x, self.player.rect.y)
+                    if self.player.facing == 'right':
+                        Attack(self, self.player.rect.x, self.player.rect.y)
 
     def update(self):
         #atualiza os quadros
@@ -171,6 +204,10 @@ class Game:
                     sys.exit()
 
     def intro_screen(self):
+
+        if not self.music_playing:
+            pygame.mixer.music.play(-1)  # -1 = loop forever
+            self.music_playing = True
 
         title_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 64)
         subtitle_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 20)
@@ -344,6 +381,69 @@ class Game:
 
                     if event.key == pygame.K_ESCAPE:
                         return
+
+    def continues_screen(self):
+
+        title_font = pygame.font.Font(
+            "fonts/MedievalSharp-Regular.ttf",
+            64
+        )
+
+        info_font = pygame.font.Font(
+            "fonts/MedievalSharp-Regular.ttf",
+            28
+        )
+
+        while True:
+
+            self.screen.fill((15, 15, 20))
+
+            title = title_font.render(
+                "Continua...",
+                True,
+                (255, 215, 0)
+            )
+
+            info = info_font.render(
+                "Obrigado por jogar!",
+                True,
+                WHITE
+            )
+
+            info2 = info_font.render(
+                "Pressione ESC para sair.",
+                True,
+                WHITE
+            )
+
+            self.screen.blit(
+                title,
+                title.get_rect(center=(WIN_WIDTH // 2, 170))
+            )
+
+            self.screen.blit(
+                info,
+                info.get_rect(center=(WIN_WIDTH // 2, 260))
+            )
+
+            self.screen.blit(
+                info2,
+                info2.get_rect(center=(WIN_WIDTH // 2, 310))
+            )
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
 
 
 g = Game()
