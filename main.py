@@ -1,3 +1,4 @@
+import pygame
 from Button import *
 from sprites import *
 from config import *
@@ -15,6 +16,12 @@ class Game:
         self.terrain_spritesheet = Spritesheet("img/Dungeon_Tileset_at.png")
         self.enemy_spritesheet = Spritesheet("img/skeleton_movement.png")
         self.menu_background = pygame.image.load("img/title_screen.png").convert()
+        self.game_over_background = pygame.image.load("img/game_over.png").convert()
+
+        self.game_over_background = pygame.transform.scale(
+            self.game_over_background,
+            (WIN_WIDTH, WIN_HEIGHT)
+        )
 
         # Ajusta a imagem para o tamanho da janela
         self.menu_background = pygame.transform.scale(
@@ -79,10 +86,89 @@ class Game:
             self.events()
             self.update()
             self.draw()
-        self.running = False
+
 
     def game_over(self):
-        pass
+        title_font = pygame.font.Font(
+            "fonts/MedievalSharp-Regular.ttf", 60
+        )
+
+        menu_font = pygame.font.Font(
+            "fonts/MedievalSharp-Regular.ttf", 28
+        )
+
+        restart = Button(
+            220,
+            250,
+            200,
+            50,
+            "Restart",
+            menu_font
+        )
+        menu_btn = Button(
+            220,
+            315,
+            200,
+            50,
+            "Main Menu",
+            menu_font
+        )
+
+        quit_btn = Button(
+            220,
+            380,
+            200,
+            50,
+            "Exit",
+            menu_font
+        )
+
+        while True:
+
+            self.screen.blit(self.game_over_background, (0, 0))
+
+            overlay = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))
+            overlay.set_alpha(120)
+            overlay.fill((0, 0, 0))
+            self.screen.blit(overlay, (0, 0))
+
+            title = title_font.render(
+                "GAME OVER",
+                True,
+                (220, 30, 30)
+            )
+
+            self.screen.blit(
+                title,
+                title.get_rect(center=(WIN_WIDTH // 2, 120))
+            )
+
+            restart.draw(self.screen)
+            menu_btn.draw(self.screen)
+            quit_btn.draw(self.screen)
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if menu_btn.clicked(event):
+                    self.intro_screen()
+                    self.new()
+                    self.main()
+                    return
+
+                if restart.clicked(event):
+                    self.new()
+                    self.main()
+                    return
+
+                if quit_btn.clicked(event):
+                    pygame.quit()
+                    sys.exit()
 
     def intro_screen(self):
 
@@ -258,6 +344,7 @@ class Game:
 
                     if event.key == pygame.K_ESCAPE:
                         return
+
 
 g = Game()
 g.intro_screen()

@@ -80,8 +80,10 @@ class Player(pygame.sprite.Sprite):
 
     def collide_enemy(self):
         hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
+
         if hits:
             self.kill()
+            self.game.playing = False
 
     def collide_blocks(self, direction):
         if direction == "x":
@@ -156,6 +158,16 @@ class Player(pygame.sprite.Sprite):
                 self.animation_loop += 0.1
                 if self.animation_loop >= 4:
                     self.animation_loop = 1
+
+class Attack(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self.x = x
+        self.y = y
+        self.width = TILESIZE
+        self.height = TILESIZE
+
+        
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
