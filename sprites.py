@@ -8,7 +8,7 @@ class Spritesheet:
         self.sheet = pygame.image.load(file).convert()
 
     def get_sprite(self, x, y, width, height):
-        sprite = pygame.Surface([width, height])
+        sprite = pygame.Surface([width, height], pygame.SRCALPHA)
         sprite.blit(self.sheet, (0, 0), (x, y, width, height))
         sprite.set_colorkey(BLACK)
 
@@ -32,14 +32,10 @@ class Player(pygame.sprite.Sprite):
         self.y_change = 0
 
         self.facing = 'down'
+        self.animation_loop = 1
 
-
-
-        self.image = self.game.character_spritesheet.get_sprite(175,70 ,134,156)
-        self.image = pygame.transform.scale(self.image, (TILESIZE, TILESIZE))
-
-
-
+        self.image = self.game.character_spritesheet.get_sprite(10,12 ,self.height,self.width)
+        self.image.set_colorkey(BLACK)
 
         self.rect=self.image.get_rect()
         self.rect.x = self.x
@@ -47,8 +43,12 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.movement()
+        self.animate()
+
         self.rect.x += self.x_change
+        self.collide_blocks("x")
         self.rect.y += self.y_change
+        self.collide_blocks("y")
 
         self.x_change = 0
         self.y_change = 0
@@ -68,6 +68,160 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_DOWN]:
             self.y_change +=  PLAYER_SPEED
             self.facing = 'down'
+
+    def collide_blocks(self, direction):
+        if direction == "x":
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            if hits:
+                if self.x_change > 0:
+                    self.rect.x = hits[0].rect.x - self.rect.width
+                if self.x_change < 0:
+                    self.rect.x = hits[0].rect.x + self.rect.width
+        if direction == "y":
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            if hits:
+
+                if self.y_change > 0:
+                    self.rect.y = hits[0].rect.top - self.rect.height
+                if self.y_change < 0:
+                    self.rect.y = hits[0].rect.bottom
+
+    def animate(self):
+        down_animation = [self.game.character_spritesheet.get_sprite(10, 10, self.width, self.height),
+                                self.game.character_spritesheet.get_sprite(60, 15, self.width, self.height),
+                                self.game.character_spritesheet.get_sprite(105, 15, self.width, self.height),
+                                self.game.character_spritesheet.get_sprite(155, 15, self.width, self.height)]
+
+        up_animation = [self.game.character_spritesheet.get_sprite(10, 75, self.width, self.height),
+                            self.game.character_spritesheet.get_sprite(60, 75, self.width, self.height),
+                            self.game.character_spritesheet.get_sprite(109, 75, self.width, self.height),
+                            self.game.character_spritesheet.get_sprite(155, 75, self.width, self.height)]
+
+        left_animation = [self.game.character_spritesheet.get_sprite(35, 120, self.width, self.height),
+                              self.game.character_spritesheet.get_sprite(100, 120, self.width, self.height),
+                              self.game.character_spritesheet.get_sprite(162, 120, self.width, self.height),
+                              self.game.character_spritesheet.get_sprite(225, 120, self.width, self.height)]
+
+        right_animation = [self.game.character_spritesheet.get_sprite(5, 170, self.width, self.height),
+                               self.game.character_spritesheet.get_sprite(68, 170, self.width, self.height),
+                               self.game.character_spritesheet.get_sprite(130, 170, self.width, self.height),
+                               self.game.character_spritesheet.get_sprite(195, 170, self.width, self.height),]
+
+        if self.facing == 'down':
+            if self.y_change == 0:
+                    self.image = self.game.character_spritesheet.get_sprite(10,15,self.width,self.height)
+            else:
+                self.image = down_animation[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 4:
+                    self.animation_loop = 1
+
+        if self.facing == 'up':
+            if self.y_change == 0:
+                self.image = self.game.character_spritesheet.get_sprite(10, 75, self.width, self.height)
+            else:
+                self.image = up_animation[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 4:
+                    self.animation_loop = 1
+
+        if self.facing == 'left':
+            if self.x_change == 0:
+                self.image = self.game.character_spritesheet.get_sprite(35, 120, self.width, self.height)
+            else:
+                self.image = left_animation[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 4:
+                    self.animation_loop = 1
+
+        if self.facing == 'right':
+            if self.x_change == 0:
+                self.image = self.game.character_spritesheet.get_sprite(5, 170, self.width, self.height)
+            else:
+                self.image = right_animation[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 4:
+                    self.animation_loop = 1
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+
+        self.game = game
+        self._layer = ENEMIES_LAYER
+        self.groups = self.game.all_sprites, self.game.enemies
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+        self.width = TILESIZE
+        self.height = TILESIZE
+
+        self.x_change = 0
+        self.y_change = 0
+
+        self.facing = random.choice(['left', 'right'])
+        self.animation_loop = 0
+        self.movement_loop = 0
+        self.max_travel = random.randint(10, 50)
+
+        self.image = self.game.enemy_spritesheet.get_sprite(5, 10, self.width, self.height)
+        self.image = pygame.transform.scale(self.image, (ENEMY_SIZE, ENEMY_SIZE))
+        self.image.set_colorkey(BLACK)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+    def update(self):
+        self.movement()
+        self.animate()
+
+        self.rect.x += self.x_change
+        self.rect.y += self.y_change
+
+
+        self.x_change = 0
+        self.y_change = 0
+
+    def movement(self):
+        if self.facing == 'left':
+            self.x_change -= ENEMY_SPEED
+            self.movement_loop -= 1
+            if self.movement_loop <= -self.max_travel:
+                self.facing = 'right'
+        if self.facing == 'right':
+            self.x_change += ENEMY_SPEED
+            self.movement_loop += 1
+            if self.movement_loop >= self.max_travel:
+                self.facing = 'left'
+
+    def animate(self):
+        right_animation = [pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(5, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(35, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(70, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(130, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(160, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(190, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(220, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(250, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          pygame.transform.scale(self.game.enemy_spritesheet.get_sprite(280, 10, self.width, self.height), (ENEMY_SIZE, ENEMY_SIZE)),
+                          ]
+        left_animation = [
+            pygame.transform.flip(frame, True, False)
+            for frame in right_animation
+        ]
+
+        if self.facing == "right":
+            self.image = right_animation[int(self.animation_loop)]
+
+        elif self.facing == "left":
+            self.image = left_animation[int(self.animation_loop)]
+
+        self.animation_loop += 0.1
+
+        if self.animation_loop >= len(right_animation):
+            self.animation_loop = 0
+
+
+
 
 
 
@@ -89,8 +243,6 @@ class TopBlock(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
-
-
 
 class Ground(pygame.sprite.Sprite):
     def __init__(self, game, x, y):

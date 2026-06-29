@@ -15,8 +15,9 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.character_spritesheet = Spritesheet("img/character_sheet.png")
+        self.character_spritesheet = Spritesheet("img/mage_sheet.png")
         self.terrain_spritesheet = Spritesheet("img/Dungeon_Tileset_at.png")
+        self.enemy_spritesheet = Spritesheet("img/skeleton_movement.png")
 
     def createTilemap(self):
         for i, row in enumerate(tilemap):
@@ -33,6 +34,8 @@ class Game:
                     Player(self, j, i)
                 if column == "D":
                     Door(self, j, i)
+                if column == "E":
+                    Enemy(self, j, i)
 
 
 
@@ -83,8 +86,6 @@ class Game:
 g = Game()
 g.intro_screen()
 g.new()
-image_to_load = pygame.image.load("img/single_char.png").convert_alpha()
-print(image_to_load.get_size())
 while g.running:
     g.main()
     g.game_over()
