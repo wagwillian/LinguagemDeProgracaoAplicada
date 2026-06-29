@@ -1,8 +1,4 @@
-from turtledemo.sorting_animate import Block
-
-import pygame
-from pygame.examples.aliens import Player
-
+from Button import *
 from sprites import *
 from config import *
 import sys
@@ -18,6 +14,13 @@ class Game:
         self.character_spritesheet = Spritesheet("img/mage_sheet.png")
         self.terrain_spritesheet = Spritesheet("img/Dungeon_Tileset_at.png")
         self.enemy_spritesheet = Spritesheet("img/skeleton_movement.png")
+        self.menu_background = pygame.image.load("img/title_screen.png").convert()
+
+        # Ajusta a imagem para o tamanho da janela
+        self.menu_background = pygame.transform.scale(
+            self.menu_background,
+            (WIN_WIDTH, WIN_HEIGHT)
+        )
 
     def createTilemap(self):
         for i, row in enumerate(tilemap):
@@ -82,7 +85,180 @@ class Game:
         pass
 
     def intro_screen(self):
-        pass
+
+        title_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 64)
+        subtitle_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 20)
+        menu_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 28)
+
+        iniciar = Button(220, 180, 200, 50, "Start Game", menu_font)
+        instrucoes = Button(220, 245, 200, 50, "Instructions", menu_font)
+        sobre = Button(220, 310, 200, 50, "About", menu_font)
+        sair = Button(220, 375, 200, 50, "Exit", menu_font)
+
+        while True:
+
+            self.screen.blit(self.menu_background, (0, 0))
+
+            overlay = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))
+            overlay.set_alpha(110)
+            overlay.fill((0, 0, 0))
+            self.screen.blit(overlay, (0, 0))
+
+            title = "EPIC DUNGEON"
+
+            shadow = title_font.render(title, True, (20, 20, 20))
+            text = title_font.render(title, True, (255, 220, 80))
+
+            rect = text.get_rect(center=(WIN_WIDTH // 2, 70))
+
+            self.screen.blit(shadow, (rect.x + 4, rect.y + 4))
+            self.screen.blit(text, rect)
+
+            subtitle = subtitle_font.render(
+                "Escape the Ancient Dungeon",
+                True,
+                (220, 220, 220)
+            )
+
+            self.screen.blit(
+                subtitle,
+                subtitle.get_rect(center=(WIN_WIDTH // 2, 120))
+            )
+
+            iniciar.draw(self.screen)
+            instrucoes.draw(self.screen)
+            sobre.draw(self.screen)
+            sair.draw(self.screen)
+
+            version = pygame.font.SysFont(None, 20).render(
+                "Version 1.0",
+                True,
+                (170, 170, 170)
+            )
+
+            self.screen.blit(version, (10, 455))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if iniciar.clicked(event):
+                    return
+
+                if instrucoes.clicked(event):
+                    self.instructions_screen()
+
+                if sobre.clicked(event):
+                    self.about_screen()
+
+                if sair.clicked(event):
+                    pygame.quit()
+                    sys.exit()
+
+    def instructions_screen(self):
+
+        title_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 42)
+        menu_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 26)
+
+        lines = [
+            "Use the Arrow Keys to move.",
+            "",
+            "Avoid the skeletons.",
+            "",
+            "Find the exit door.",
+            "",
+            "Good luck, Wizard!",
+            "",
+            "Press ESC to return."
+        ]
+
+        while True:
+
+            self.screen.fill((18, 18, 18))
+
+            title = title_font.render("INSTRUCTIONS", True, (255, 215, 0))
+            self.screen.blit(title, title.get_rect(center=(WIN_WIDTH // 2, 50)))
+
+            y = 120
+
+            for line in lines:
+                text = menu_font.render(line, True, WHITE)
+                self.screen.blit(text, text.get_rect(center=(WIN_WIDTH // 2, y)))
+                y += 40
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+
+                    if event.key == pygame.K_ESCAPE:
+                        return
+
+    def about_screen(self):
+
+        title_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 42)
+        menu_font = pygame.font.Font("fonts/MedievalSharp-Regular.ttf", 24)
+
+        lines = [
+
+            "Dungeon Adventure",
+
+            "",
+
+            "Developed for",
+
+            "Applied Programming",
+
+            "",
+
+            "Developer:",
+
+            "Wagner W. Oliveira",
+
+            "RU: 5297048",
+
+            "",
+
+            "Press ESC to return"
+
+        ]
+
+        while True:
+
+            self.screen.fill((30, 20, 15))
+
+            title = title_font.render("ABOUT", True, (255, 215, 0))
+            self.screen.blit(title, title.get_rect(center=(WIN_WIDTH // 2, 50)))
+
+            y = 120
+
+            for line in lines:
+                text = menu_font.render(line, True, WHITE)
+                self.screen.blit(text, text.get_rect(center=(WIN_WIDTH // 2, y)))
+                y += 35
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+
+                    if event.key == pygame.K_ESCAPE:
+                        return
+
 g = Game()
 g.intro_screen()
 g.new()
